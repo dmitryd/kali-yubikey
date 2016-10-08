@@ -1,0 +1,31 @@
+#!/bin/sh
+
+#/usr/share/initramfs-tools/scripts/local-bottom/
+
+set -e
+
+PREREQ=""
+
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /scripts/functions
+
+# Set new LUKS key
+if [ -f /boot/yk_challenge_new ] && [ -f /boot/kfo ] && [ -f /boot/kfn ] ; then
+    rm /boot/yk_challenge
+    mv /boot/yk_challenge_new /boot/yk_challenge
+    cat /boot/kfo | cryptsetup --key-file=- luksChangeKey --key-slot 2 /dev/sda5 /boot/kfn
+fi
+
+[ -f /boot/kfn ] && rm /boot/kfn
+[ -f /boot/kfo ] && rm /boot/kfo

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# /lib/cryptsetup/scripts/yubikey_unlock
+
+echo "" >&2
+
+if [ ! -d /boot ] ; then
+    mkdir /boot
+    mount -t ext2 /dev/sda1 /boot >&2
+    sleep 3
+fi
+
+[ -f /boot/yk_challenge_new ] && rm /boot/yk_challenge_new
+[ -f /boot/kfn ] && rm /boot/kfn
+[ -f /boot/kfo ] && rm /boot/kfo
+
+if [ $CRYPTTAB_TRIED -ne 2 ] ; then
+    USER_PASSWORD=`/lib/cryptsetup/askpass "Enter your password to unlock the disk (${CRYPTTAB_TRIED}): "`
+
+    # Get password
+    CHALLENGE=`cat /boot/yk_challenge`
+    PASSWORD=`/bin/ykchalresp -2 "${USER_PASSWORD}${CHALLENGE}"`
+    echo "${PASSWORD}" > /boot/kfo
+
+    # Prepare new password
+    CHALLENGE=`/bin/uuidgen`
+    echo -n "${CHALLENGE}" > /boot/yk_challenge_new
+    /bin/ykchalresp -2 "${USER_PASSWORD}${CHALLENGE}" > /boot/kfn
+
+    echo "${PASSWORD}"
+else
+    /lib/cryptsetup/askpass "Enter your password to unlock the disk (${CRYPTTAB_TRIED}): "
+fi
+
