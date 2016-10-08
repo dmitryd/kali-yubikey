@@ -98,7 +98,7 @@ Now you can [re-create](#initial) initial challenge and key to try again.
 
 ## License
 
-GPL v3 or newer.
+GPL v3 or newer. Remember that attribution is required.
 
 ## Support
 

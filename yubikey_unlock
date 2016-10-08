@@ -1,5 +1,8 @@
 #!/bin/sh
-
+#
+# Copyright (c) 2016 Dmitry Dulepov <dmitry.dulepov@gmail.com>
+# https://github.com/dmitryd/kali-yubikey
+#
 # /lib/cryptsetup/scripts/yubikey_unlock
 
 echo "" >&2

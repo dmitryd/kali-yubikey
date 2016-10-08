@@ -1,5 +1,8 @@
 #!/bin/sh
-
+#
+# Copyright (c) 2016 Dmitry Dulepov <dmitry.dulepov@gmail.com>
+# https://github.com/dmitryd/kali-yubikey
+#
 # /usr/share/initramfs-tools/hooks/yubikey
 
 set -e
