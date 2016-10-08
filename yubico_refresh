@@ -27,5 +27,5 @@ if [ -f /boot/yk_challenge_new ] && [ -f /boot/kfo ] && [ -f /boot/kfn ] ; then
     cat /boot/kfo | cryptsetup --key-file=- luksChangeKey --key-slot 2 /dev/sda5 /boot/kfn
 fi
 
-[ -f /boot/kfn ] && rm /boot/kfn
-[ -f /boot/kfo ] && rm /boot/kfo
+[ -f /boot/kfn ] && /bin/shred -u -z /boot/kfn
+[ -f /boot/kfo ] && /bin/shred -u -z /boot/kfo

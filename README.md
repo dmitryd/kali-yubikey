@@ -8,7 +8,7 @@ I came across the [experimental project](https://github.com/flowolf/initramfs_yk
 
 There are several important things you should know:
 
-* Due to the structure of Kali init scripts, key handling had to be split to several scripts. To transfer data, temporary files are created on the `/boot` partition. Two of them contain sensitive information. `/boot/kfo` contains the current LUKS password and `/boot/kfn` contains the new LUKS password. While files are cleared from the file system, it is a simple `rm`, so theoretically they can be recovered (TODO: will be mitigated soon). Additionally, a malicious `initramfs` hook can read these files. If this is an issue for you, you should not use this solution.
+* **Security note:** Due to the structure of Kali init scripts, key handling had to be split to several scripts. To transfer data, temporary files are created on the `/boot` partition. Two of them contain sensitive information. `/boot/kfo` contains the current LUKS password and `/boot/kfn` contains the new LUKS password. These files are securely erased if the volume is unlocked. However a malicious `initramfs` hook can read these files. Alternatively, if the computer is powered off during boot, these files can remain on the file system and provide an easy way to unlock your computer. Always wait until boot process finishes before powering down the computer!
 * LUKS key slot 2 is hard-coded in the script to let you use key slot 1 for the nuke key (which you definitely should use!)
 * You should always have a backup passphrase: long and hard to guess. You will be able to enter it each 3<sup>rd</sup> time when you are prompted for the password.
 
