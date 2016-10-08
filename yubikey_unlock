@@ -14,8 +14,8 @@ if [ ! -d /boot ] ; then
 fi
 
 [ -f /boot/yk_challenge_new ] && rm /boot/yk_challenge_new
-[ -f /boot/kfn ] && rm /boot/kfn
-[ -f /boot/kfo ] && rm /boot/kfo
+[ -f /boot/kfn ] && /bin/shred -u -z /boot/kfn
+[ -f /boot/kfo ] && /bin/shred -u -z /boot/kfo
 
 if [ $CRYPTTAB_TRIED -ne 2 ] ; then
     USER_PASSWORD=`/lib/cryptsetup/askpass "Enter your password to unlock the disk (${CRYPTTAB_TRIED}): "`
