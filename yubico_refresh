@@ -33,10 +33,24 @@ if [ -f /boot/yubikey/yk_challenge_new ] && [ -f /boot/yubikey/kfo.enc ] && [ -f
     /bin/gpgv1 --no-random-seed-file --lock-never --homedir=/root/root/.gnupg --output /tmp/kfn --recipient initramfs --decrypt /boot/yubikey/kfn.enc &> /dev/null
 
     if [ -f /tmp/kfo ] && [ -f /tmp/kfn ] ; then
-        rm /boot/yubikey/yk_challenge
-        mv /boot/yubikey/yk_challenge_new /boot/yubikey/yk_challenge
         cat /tmp/kfo | cryptsetup --key-file=- luksChangeKey --key-slot 2 /dev/sda5 /tmp/kfn
+        EC="$?"
+        if [ $EC -eq 0 ] ; then
+            # All fine
+            rm /boot/yubikey/yk_challenge
+            mv /boot/yubikey/yk_challenge_new /boot/yubikey/yk_challenge
+            echo "Your LUKS key was modified."
+        else
+            echo "Failed to modify LUKS key with exit code $EC. Next boot will reuse the same key."
+            sleep 5
+        fi
+    else
+        echo "Could not find LUKS keys. Next boot will reuse the same key."
+        sleep 5
     fi
+else
+    echo "Could not find yubikey files."
+    sleep 5
 fi
 
 [ -f /tmp/kfn ] && shred -u -z /tmp/kfn
