@@ -164,7 +164,7 @@ Rebuild `initramfs`:
 update-initramfs -u
 ```
 
-Reboot with youbikey inserted and type the password you [created earlier](#initial).
+Reboot with youbikey inserted and type the password you [created earlier](#user-content-initial).
 
 ## Troubleshooting
 
@@ -174,7 +174,7 @@ If your yubikey password does not work, you can login with safety password when 
 cryptsetup luksKillSlot /dev/sda5 2
 ```
 
-Now you can [re-create](#initial) initial challenge and key to try again.
+Now you can [re-create](#user-content-initial) initial challenge and key to try again.
 
 ## License
 
