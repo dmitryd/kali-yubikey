@@ -8,9 +8,10 @@ I came across the [experimental project](https://github.com/flowolf/initramfs_yk
 
 There are several important things you should know:
 
-* **Security note:** Due to the structure of Kali init scripts, key handling had to be split to several scripts. To transfer data, temporary files are created on the `/boot` partition. Two of them contain sensitive information. `/boot/kfo` contains the current LUKS password and `/boot/kfn` contains the new LUKS password. These files are securely erased if the volume is unlocked. However a malicious `initramfs` hook can read these files. Alternatively, if the computer is powered off during boot, these files can remain on the file system and provide an easy way to unlock your computer. Always wait until boot process finishes before powering down the computer!
+* This is not a beginner's guide! While I made sure that instructions here truly work, there still can be typos, mistakes, differences between Linux releases, etc. Make sure that you are comfortable with shell, shell scripting, and how to recover from unusual situations.
+* **Security note:** Due to the structure of Kali init scripts, key handling had to be split to several scripts. To transfer data, temporary files are created in the `/boot/yubikey/` directory. To prevent those keys from being readable, they are encrypted with GnuPG. Private key for this encryption is stored on your LUKS partition, thus there is no way for anybody to decrypt your current or new key unless they run the whole system in the emulator and can pause after each step before those keys are encrypted.
 * LUKS key slot 2 is hard-coded in the script to let you use key slot 1 for the [nuke key](https://www.kali.org/tutorials/nuke-kali-linux-luks/) (which you definitely should use!)
-* You should always have a backup passphrase: long and hard to guess. You will be able to enter it each 3<sup>rd</sup> time when you are prompted for the password.
+* You should always have a backup password: long and hard to guess. Choose a quote from your favorite book that you can memorize forever. You will be able to enter this backup password each 3<sup>rd</sup> time when you are prompted for the password. It will unlock your LUKS partition in any case.
 
 ## Setting up
 
@@ -43,6 +44,8 @@ make LD_FLAGS=-all-static
 make install
 ```
 
+Let's free some disk space and remove huge packages that we will never use again.
+
 Remove `asciidoc`:
 
 ```sh
@@ -65,6 +68,8 @@ sda5_crypt UUID=4d435248-dfa8-4f77-8adb-c75242e178a0 none luks,keyscript=yubikey
 
 `sda5_crypt` is the default if you used "full disk encrypted" option during setup. `UUID` will be different in your case.
 
+**Note:** you may see Linux compalin about unknown parameter `,keyscript=yubikey_unlock` if you montor `/var/log/`. Ignore that. This parameter is for init scripts and other parts of the system are not familiar with it.
+
 Connect yubikey and personalize it:
 
 ```sh
@@ -74,13 +79,84 @@ ykpersonalize -2 -ochal-resp -ochal-hmac -oserial-usb-visible -oserial-api-visib
 <a href="initial"></a>Create initial challenge and key:
 
 ```sh
-uuidgen > /boot/yk_challenge
-ykchalresp -2 "yourpassword`cat /boot/yk_challenge`" > kf
+mkdir /boot/yubikey
+chmod u+rwx,g-rwx,o-rwx /boot/yubikey
+uuidgen > /boot/yubikey/yk_challenge
+ykchalresp -2 "yourpassword`cat /boot/yubikey/yk_challenge`" > kf
 cryptsetup luksAddKey --key-slot 2 /dev/sda5 kf
 shred -u -z kf
 ```
 
-**Note:** `yourpassword` above is the password you will type each time during login with yubikey. This is **not** your initial (safe) passphrase you entered during installation!
+**Note:** `yourpassword` above is the password you will type each time during login with yubikey. This is **not** your initial (safe) password that you entered during Kali installation!
+
+[Download](https://www.gnupg.org/download/) GnuPG Classic (!) from the official web site, check its signature, build and install. Make sure that you **do** download a Classic version (1.4.x), not GnuPG 2!
+
+```sh
+wget https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-1.4.21.tar.bz2
+wget https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-1.4.21.tar.bz2.sig
+gpg --keyserver keys.gnupg.net --recv-keys 4F25E3B6 E0856959 33BD3F06 7EFD60D9
+gpg --verify gnupg-1.4.21.tar.bz2.sig gnupg-1.4.21.tar.bz2
+```
+
+You should now see a message about good signature similar to this:
+
+```sh
+gpg: Signature made Wed 17 Aug 2016 09:30:14 AM EDT
+gpg:                using RSA key 249B39D24F25E3B6
+gpg: Good signature from "Werner Koch (dist sig)" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: D869 2123 C406 5DEA 5E0F  3AB5 249B 39D2 4F25 E3B6
+```
+
+Should you see something else but not "Good signature", you should re-download GnuPG and repeat key verification until you have a good signature.
+
+Build and instal GnuPG. Note that Kali comes with a stripped down version of `gnupgv1` binary. This build will install a full version into `/use/local/bin` but it will not be visible by default from shell, so we will always call it using full path.
+
+```sh
+tar xjf gnupg-1.4.21.tar.bz2
+cd gnupg-1.4.21
+./configure --program-suffix=v1
+make install
+```
+
+Generate GnuPG keys for `initramfs` scripts without password. Note: here we use both gpg v2 and v1 to simplify the whole thing.
+
+```sh
+gpg --quick-gen-key initramfs "" "" 0
+gpg --export initramfs > initramfs.pub
+/usr/local/bin/gpgv1 --homedir /boot/yubikey --import initramfs.pub
+rm initramfs.pub
+gpg --export-secret-keys initramfs > initramfs.pri
+/usr/local/bin/gpgv1 --import initramfs.pri
+shred -u -z initramfs.pri
+```
+
+Now we need to set the key trust to ultimate or gpg will refuse to decrypt files with it. Find out key id:
+
+```sh
+/usr/local/bin/gpgv1 --homedir /boot/yubikey --list-keys
+```
+
+You will see something like:
+
+```
+/boot/yubikey/pubring.gpg
+--------------------------
+pub   2048R/3DB17B0F 2016-10-09
+uid                  initramfs
+sub   2048R/13ABC021 2016-10-09
+```
+
+Then you set the trust:
+
+```sh
+/usr/local/bin/gpgv1  --homedir /boot/yubikey --edit-key 3DB17B0F
+```
+
+You will need your own key id above instead of `3DB17B0F`! When prompted, type `trust` and then select `I trust ultimately`, wait until it is done and type `quit`.
+
+Now after you got GnuPG keys in place, it is time to finalize the installation.
 
 Rebuild `initramfs`:
 
@@ -88,18 +164,28 @@ Rebuild `initramfs`:
 update-initramfs -u
 ```
 
-Reboot with youbikey inserted. If your yubikey password does not work, you can login with safety password when you see `Enter your password to unlock the disk (2):`. After booting, remove the key from the LUKS slot:
+Reboot with youbikey inserted and type the password you [created earlier](#initial).
+
+## Troubleshooting
+
+If your yubikey password does not work, you can login with safety password when you see `Enter your password to unlock the disk (2):` (note `(2)`!). After booting, remove the damaged key from the LUKS slot:
 
 ```sh
-cryptsetup luksKillSlot /dev/sda 2
+cryptsetup luksKillSlot /dev/sda5 2
 ```
 
 Now you can [re-create](#initial) initial challenge and key to try again.
 
 ## License
 
-GPL v3 or newer. Remember that copyright has to be kept even in derieved work!
+GPL v3 or newer. Remember that copyright has to be kept even in derived work!
 
 ## Support
 
-While I am interested in improvements and suggestions, I cannot provide any support or guarantees. Use at your own risk.
+While I am interested in improvements and suggestions, I cannot provide any immediate support or guarantees or be responsible for any damage.
+
+Use at your own risk.
+
+## Contact
+
+You can contact me at [dmitry.dulepov@gmail.com](dmitry.dulepov@gmail.com).
