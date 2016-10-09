@@ -76,7 +76,7 @@ Connect yubikey and personalize it:
 ykpersonalize -2 -ochal-resp -ochal-hmac -oserial-usb-visible -oserial-api-visible
 ```
 
-<a href="initial"></a>Create initial challenge and key:
+<a name="initial"></a>Create initial challenge and key:
 
 ```sh
 mkdir /boot/yubikey
