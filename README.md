@@ -176,6 +176,8 @@ cryptsetup luksKillSlot /dev/sda5 2
 
 Now you can [re-create](#user-content-initial) initial challenge and key to try again.
 
+There are two scripts in the `tools/` directory that can help you to test and reset the password.
+
 ## License
 
 GPL v3 or newer. Remember that copyright has to be kept even in derived work!
