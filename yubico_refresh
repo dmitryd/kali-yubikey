@@ -24,11 +24,23 @@ esac
 . /scripts/functions
 
 # Set new LUKS key
-if [ -f /boot/yk_challenge_new ] && [ -f /boot/kfo ] && [ -f /boot/kfn ] ; then
-    rm /boot/yk_challenge
-    mv /boot/yk_challenge_new /boot/yk_challenge
-    cat /boot/kfo | cryptsetup --key-file=- luksChangeKey --key-slot 2 /dev/sda5 /boot/kfn
+if [ -f /boot/yubikey/yk_challenge_new ] && [ -f /boot/yubikey/kfo.enc ] && [ -f /boot/yubikey/kfn.enc ] ; then
+
+    [ -f /tmp/kfn ] && shred -u -z /tmp/kfn
+    [ -f /tmp/kfo ] && shred -u -z /tmp/kfo
+
+    /bin/gpgv1 --no-random-seed-file --lock-never --homedir=/root/root/.gnupg --output /tmp/kfo --recipient initramfs --decrypt /boot/yubikey/kfo.enc &> /dev/null
+    /bin/gpgv1 --no-random-seed-file --lock-never --homedir=/root/root/.gnupg --output /tmp/kfn --recipient initramfs --decrypt /boot/yubikey/kfn.enc &> /dev/null
+
+    if [ -f /tmp/kfo ] && [ -f /tmp/kfn ] ; then
+        rm /boot/yubikey/yk_challenge
+        mv /boot/yubikey/yk_challenge_new /boot/yubikey/yk_challenge
+        cat /tmp/kfo | cryptsetup --key-file=- luksChangeKey --key-slot 2 /dev/sda5 /tmp/kfn
+    fi
 fi
 
-[ -f /boot/kfn ] && /bin/shred -u -z /boot/kfn
-[ -f /boot/kfo ] && /bin/shred -u -z /boot/kfo
+[ -f /tmp/kfn ] && shred -u -z /tmp/kfn
+[ -f /tmp/kfo ] && shred -u -z /tmp/kfo
+[ -f /boot/yubikey/kfn.enc ] && shred -u -z /boot/yubikey/kfn.enc
+[ -f /boot/yubikey/kfo.enc ] && shred -u -z /boot/yubikey/kfo.enc
+

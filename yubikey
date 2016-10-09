@@ -24,3 +24,6 @@ esac
 copy_exec /usr/local/bin/ykchalresp /bin/ykchalresp
 copy_exec /usr/bin/uuidgen /bin/uuidgen
 copy_exec /usr/bin/shred /bin/shred
+copy_exec /usr/local/bin/gpgv1 /bin/gpgv1
+#copy_exec /bin/busybox
+

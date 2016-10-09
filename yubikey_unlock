@@ -13,22 +13,30 @@ if [ ! -d /boot ] ; then
     sleep 3
 fi
 
-[ -f /boot/yk_challenge_new ] && rm /boot/yk_challenge_new
-[ -f /boot/kfn ] && /bin/shred -u -z /boot/kfn
-[ -f /boot/kfo ] && /bin/shred -u -z /boot/kfo
+[ -f /boot/yubikey/yk_challenge_new ] && rm /boot/yubikey/yk_challenge_new
 
 if [ $CRYPTTAB_TRIED -ne 2 ] ; then
     USER_PASSWORD=`/lib/cryptsetup/askpass "Enter your password to unlock the disk (${CRYPTTAB_TRIED}): "`
 
     # Get password
-    CHALLENGE=`cat /boot/yk_challenge`
+    CHALLENGE=`cat /boot/yubikey/yk_challenge`
     PASSWORD=`/bin/ykchalresp -2 "${USER_PASSWORD}${CHALLENGE}"`
-    echo "${PASSWORD}" > /boot/kfo
+    echo "${PASSWORD}" > /boot/yubikey/kfo
 
     # Prepare new password
     CHALLENGE=`/bin/uuidgen`
-    echo -n "${CHALLENGE}" > /boot/yk_challenge_new
-    /bin/ykchalresp -2 "${USER_PASSWORD}${CHALLENGE}" > /boot/kfn
+    echo -n "${CHALLENGE}" > /boot/yubikey/yk_challenge_new
+    chmod 0400 /boot/yubikey/yk_challenge_new
+    /bin/ykchalresp -2 "${USER_PASSWORD}${CHALLENGE}" > /boot/yubikey/kfn
+
+    /bin/gpgv1 --homedir /boot/yubikey --output /boot/yubikey/kfo.enc --recipient initramfs --encrypt /boot/yubikey/kfo &> /dev/null
+    /bin/gpgv1 --homedir /boot/yubikey --output /boot/yubikey/kfn.enc --recipient initramfs --encrypt /boot/yubikey/kfn &> /dev/null
+
+    chmod 0600 /boot/yubikey/kfo.enc
+    chmod 0600 /boot/yubikey/kfn.enc
+
+    /bin/shred -u -z /boot/yubikey/kfn
+    /bin/shred -u -z /boot/yubikey/kfo
 
     echo "${PASSWORD}"
 else
