@@ -15,6 +15,12 @@ fi
 
 [ -f /boot/yubikey/yk_challenge_new ] && rm /boot/yubikey/yk_challenge_new
 
+/bin/ykinfo -s &> /dev/null
+if [ $? -ne 0 ] ; then
+    # No yubikey present
+    CRYPTTAB_TRIED=2
+fi
+
 if [ $CRYPTTAB_TRIED -ne 2 ] ; then
     USER_PASSWORD=`/lib/cryptsetup/askpass "Enter your password to unlock the disk (${CRYPTTAB_TRIED}): "`
 
