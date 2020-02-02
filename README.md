@@ -178,6 +178,14 @@ Now you can [re-create](#user-content-initial) initial challenge and key to try 
 
 There are two scripts in the `tools/` directory that can help you to test and reset the password.
 
+## Useful links
+
+["YubiKey and LUKS encrypted partition/disk" at ArchWiki](https://wiki.archlinux.org/index.php/YubiKey#YubiKey_and_LUKS_encrypted_partition%2Fdisk)
+
+["YubiKey Full Disk Encryption" project at GitHub](https://github.com/agherzan/yubikey-full-disk-encryption)
+
+["GnuPG hook for Arch Linux initcpio" project at GitHub](https://github.com/fuhry/initramfs-scencrypt)
+
 ## License
 
 GPL v3 or newer. Remember that copyright has to be kept even in derived work!
