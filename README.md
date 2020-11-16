@@ -186,6 +186,8 @@ There are two scripts in the `tools/` directory that can help you to test and re
 
 ["GnuPG hook for Arch Linux initcpio" project at GitHub](https://github.com/fuhry/initramfs-scencrypt)
 
+[2020/11/16: for Ubuntu](https://askubuntu.com/questions/599825/yubikey-two-factor-authentication-full-disk-encryption-via-luks/599826#599826)
+
 ## License
 
 GPL v3 or newer. Remember that copyright has to be kept even in derived work!
